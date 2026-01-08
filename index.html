@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaction Timer - Test Your Reflexes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0F172A;
+            color: #F8FAFC;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: clamp(2rem, 5vw, 3rem);
+            text-align: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #94A3B8;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: #1E293B;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            margin-bottom: 1.5rem;
+        }
+
+        .instructions {
+            color: #94A3B8;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .instructions h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            color: #F8FAFC;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        /* 3D Canvas Container */
+        #canvas-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        #canvas-container:hover {
+            transform: scale(1.01);
+        }
+
+        #three-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .game-status {
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            min-height: 2rem;
+            margin-bottom: 1.5rem;
+            color: #94A3B8;
+        }
+
+        .game-status.waiting {
+            color: #F59E0B;
+        }
+
+        .game-status.ready {
+            color: #10B981;
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        .game-status.result {
+            color: #10B981;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+        }
+
+        .game-status.false-start {
+            color: #EF4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 1.125rem;
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: #F8FAFC;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #1E293B;
+            color: #94A3B8;
+            border: 2px solid #334155;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            border-color: #10B981;
+            color: #10B981;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-box {
+            background: #0F172A;
+            padding: 1.25rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #1E293B;
+        }
+
+        .stat-label {
+            color: #94A3B8;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #10B981;
+        }
+
+        .hint {
+            text-align: center;
+            color: #64748B;
+            font-size: 0.875rem;
+            margin-top: 1rem;
+            font-style: italic;
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                padding: 1.5rem;
+            }
+
+            #canvas-container {
+                height: 300px;
+            }
+
+            button {
+                width: 100%;
+                padding: 1rem;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Reaction Timer</h1>
+        <p class="subtitle">Test your reflexes with 3D precision</p>
+
+        <div class="card">
+            <div class="instructions">
+                <h3>How to Play:</h3>
+                <p>Click "Start Round" and wait for the 3D shape to turn <strong style="color: #10B981;">green</strong>. Click it as fast as you can! Don't click too early or you'll get a false start penalty.</p>
+            </div>
+
+            <div id="canvas-container">
+                <canvas id="three-canvas"></canvas>
+            </div>
+
+            <div class="game-status" id="status">Click "Start Round" to begin</div>
+
+            <div class="button-container">
+                <button class="btn-primary" id="start-btn">Start Round</button>
+                <button class="btn-secondary" id="reset-btn">Reset Stats</button>
+            </div>
+
+            <p class="hint" id="hint">Wait for the shape to turn green, then click anywhere in the 3D area</p>
+        </div>
+
+        <div class="card">
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-label">Rounds Played</div>
+                    <div class="stat-value" id="rounds">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Best Time</div>
+                    <div class="stat-value" id="best">—</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Average Time</div>
+                    <div class="stat-value" id="average">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // ===========================
+        // Game State Management
+        // ===========================
+        const GameState = {
+            IDLE: 'idle',
+            WAITING: 'waiting',
+            READY: 'ready',
+            RESULT: 'result',
+            FALSE_START: 'false_start'
+        };
+
+        let currentState = GameState.IDLE;
+        let startTime = null;
+        let delayTimeout = null;
+        let reactionTimes = [];
+
+        // ===========================
+        // Three.js Scene Setup
+        // ===========================
+        const canvas = document.getElementById('three-canvas');
+        const container = document.getElementById('canvas-container');
+
+        // Scene, Camera, Renderer
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0F172A);
+
+        const camera = new THREE.PerspectiveCamera(
+            45,
+            container.clientWidth / container.clientHeight,
+            0.1,
+            1000
+        );
+        camera.position.z = 5;
+
+        const renderer = new THREE.WebGLRenderer({ 
+            canvas: canvas, 
+            antialias: true 
+        });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+
+        const pointLight1 = new THREE.PointLight(0x10B981, 1, 100);
+        pointLight1.position.set(5, 5, 5);
+        scene.add(pointLight1);
+
+        const pointLight2 = new THREE.PointLight(0x3B82F6, 0.5, 100);
+        pointLight2.position.set(-5, -5, 5);
+        scene.add(pointLight2);
+
+        // Create 3D Shape (Torus for visual interest)
+        const geometry = new THREE.TorusGeometry(1, 0.4, 16, 100);
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x475569, // Neutral gray initially
+            metalness: 0.7,
+            roughness: 0.2,
+            emissive: 0x000000
+        });
+        const shape = new THREE.Mesh(geometry, material);
+        scene.add(shape);
+
+        // Raycaster for click detection
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        // ===========================
+        // Animation Loop
+        // ===========================
+        let rotationSpeed = 0.01;
+        let targetScale = 1;
+        let currentScale = 1;
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Smooth rotation
+            shape.rotation.x += rotationSpeed;
+            shape.rotation.y += rotationSpeed * 0.7;
+
+            // Smooth scale transition
+            currentScale += (targetScale - currentScale) * 0.1;
+            shape.scale.set(currentScale, currentScale, currentScale);
+
+            // Floating animation
+            shape.position.y = Math.sin(Date.now() * 0.001) * 0.2;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // ===========================
+        // Shape Color & Animation Control
+        // ===========================
+        function setShapeColor(color, emissive = 0x000000, scale = 1) {
+            material.color.setHex(color);
+            material.emissive.setHex(emissive);
+            targetScale = scale;
+        }
+
+        function setShapeWaiting() {
+            setShapeColor(0xF59E0B, 0x000000, 1); // Amber
+            rotationSpeed = 0.02;
+        }
+
+        function setShapeReady() {
+            setShapeColor(0x10B981, 0x10B981, 1.3); // Green with glow
+            rotationSpeed = 0.05;
+        }
+
+        function setShapeIdle() {
+            setShapeColor(0x475569, 0x000000, 1); // Neutral gray
+            rotationSpeed = 0.01;
+        }
+
+        function setShapeFalseStart() {
+            setShapeColor(0xEF4444, 0xEF4444, 0.8); // Red with glow
+            rotationSpeed = 0.01;
+        }
+
+        // ===========================
+        // DOM Elements
+        // ===========================
+        const statusEl = document.getElementById('status');
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const roundsEl = document.getElementById('rounds');
+        const bestEl = document.getElementById('best');
+        const averageEl = document.getElementById('average');
+        const hintEl = document.getElementById('hint');
+
+        // ===========================
+        // Game Logic
+        // ===========================
+        function updateStats() {
+            roundsEl.textContent = reactionTimes.length;
+            
+            if (reactionTimes.length > 0) {
+                const best = Math.min(...reactionTimes);
+                const avg = reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length;
+                bestEl.textContent = `${best}ms`;
+                averageEl.textContent = `${Math.round(avg)}ms`;
+            } else {
+                bestEl.textContent = '—';
+                averageEl.textContent = '—';
+            }
+        }
+
+        function startRound() {
+            // Clear any existing timeout
+            if (delayTimeout) {
+                clearTimeout(delayTimeout);
+            }
+
+            currentState = GameState.WAITING;
+            startBtn.disabled = true;
+            statusEl.textContent = 'Wait for green...';
+            statusEl.className = 'game-status waiting';
+            hintEl.textContent = 'Stay focused... click when it turns green!';
+            
+            setShapeWaiting();
+
+            // Random delay between 1-5 seconds
+            const delay = 1000 + Math.random() * 4000;
+
+            delayTimeout = setTimeout(() => {
+                currentState = GameState.READY;
+                startTime = Date.now();
+                statusEl.textContent = 'CLICK NOW!';
+                statusEl.className = 'game-status ready';
+                hintEl.textContent = 'Click the shape as fast as you can!';
+                
+                setShapeReady();
+            }, delay);
+        }
+
+        function handleCanvasClick(event) {
+            // Calculate mouse position in normalized device coordinates
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            // Update the raycaster
+            raycaster.setFromCamera(mouse, camera);
+
+            // Check for intersections
+            const intersects = raycaster.intersectObject(shape);
+
+            if (currentState === GameState.WAITING) {
+                // False start
+                clearTimeout(delayTimeout);
+                currentState = GameState.FALSE_START;
+                statusEl.textContent = 'False Start! Too early!';
+                statusEl.className = 'game-status false-start';
+                hintEl.textContent = 'Wait for the shape to turn green next time';
+                startBtn.disabled = false;
+                
+                setShapeFalseStart();
+            } else if (currentState === GameState.READY && intersects.length > 0) {
+                // Valid click on the shape
+                const reactionTime = Date.now() - startTime;
+                reactionTimes.push(reactionTime);
+                
+                currentState = GameState.RESULT;
+                statusEl.textContent = `${reactionTime}ms`;
+                statusEl.className = 'game-status result';
+                hintEl.textContent = getReactionFeedback(reactionTime);
+                
+                setShapeIdle();
+                updateStats();
+                startBtn.disabled = false;
+            }
+        }
+
+        function getReactionFeedback(time) {
+            if (time < 200) return '🔥 Lightning fast!';
+            if (time < 250) return '⚡ Excellent reflexes!';
+            if (time < 300) return '✨ Great reaction!';
+            if (time < 400) return '👍 Good job!';
+            return '💪 Keep practicing!';
+        }
+
+        function resetStats() {
+            reactionTimes = [];
+            updateStats();
+            currentState = GameState.IDLE;
+            statusEl.textContent = 'Stats reset! Click "Start Round" to begin';
+            statusEl.className = 'game-status';
+            hintEl.textContent = 'Wait for the shape to turn green, then click anywhere in the 3D area';
+            startBtn.disabled = false;
+            setShapeIdle();
+        }
+
+        // ===========================
+        // Event Listeners
+        // ===========================
+        startBtn.addEventListener('click', startRound);
+        resetBtn.addEventListener('click', resetStats);
+        container.addEventListener('click', handleCanvasClick);
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            
+            renderer.setSize(width, height);
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            geometry.dispose();
+            material.dispose();
+            renderer.dispose();
+        });
+    </script>
+</body>
+</html>
