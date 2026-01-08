@@ -130,6 +130,17 @@
             line-height: 1;
         }
 
+        .score-rating {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
         .game-status {
             text-align: center;
             font-size: 1.25rem;
@@ -292,6 +303,7 @@
                 <div class="score-overlay" id="score-overlay">
                     <div class="score-label">Reaction Time</div>
                     <div class="score-value" id="score-display">—</div>
+                    <div class="score-rating" id="score-rating"></div>
                 </div>
             </div>
 
@@ -465,6 +477,7 @@
         const averageEl = document.getElementById('average');
         const hintEl = document.getElementById('hint');
         const scoreDisplayEl = document.getElementById('score-display');
+        const scoreRatingEl = document.getElementById('score-rating');
 
         // ===========================
         // Game Logic
@@ -495,6 +508,7 @@
             statusEl.className = 'game-status waiting';
             hintEl.textContent = 'Stay focused... click when it turns green!';
             scoreDisplayEl.textContent = '—';
+            scoreRatingEl.style.display = 'none';
             
             setShapeWaiting();
 
@@ -532,6 +546,7 @@
                 statusEl.className = 'game-status false-start';
                 hintEl.textContent = 'Wait for the shapes to turn green next time';
                 scoreDisplayEl.textContent = '—';
+                scoreRatingEl.style.display = 'none';
                 startBtn.disabled = false;
                 
                 setShapeFalseStart();
@@ -546,6 +561,7 @@
                 statusEl.style.color = '#10B981';
                 hintEl.textContent = 'Great job! Click "Start Round" to go again';
                 scoreDisplayEl.textContent = `${reactionTime}ms`;
+                updateScoreRating(reactionTime);
                 
                 setShapeIdle();
                 updateStats();
@@ -559,6 +575,42 @@
             if (time < 300) return '✨ Great reaction!';
             if (time < 400) return '👍 Good job!';
             return '💪 Keep practicing!';
+        }
+
+        function updateScoreRating(time) {
+            let rating, color, bgColor;
+            
+            if (time < 200) {
+                rating = 'Amazing';
+                color = '#FEE2E2';
+                bgColor = 'rgba(239, 68, 68, 0.2)';
+                scoreRatingEl.style.border = '1px solid #EF4444';
+            } else if (time < 250) {
+                rating = 'Very Good';
+                color = '#FEF3C7';
+                bgColor = 'rgba(245, 158, 11, 0.2)';
+                scoreRatingEl.style.border = '1px solid #F59E0B';
+            } else if (time < 300) {
+                rating = 'Good';
+                color = '#D1FAE5';
+                bgColor = 'rgba(16, 185, 129, 0.2)';
+                scoreRatingEl.style.border = '1px solid #10B981';
+            } else if (time < 400) {
+                rating = 'Average';
+                color = '#DBEAFE';
+                bgColor = 'rgba(59, 130, 246, 0.2)';
+                scoreRatingEl.style.border = '1px solid #3B82F6';
+            } else {
+                rating = 'Below Average';
+                color = '#E2E8F0';
+                bgColor = 'rgba(100, 116, 139, 0.2)';
+                scoreRatingEl.style.border = '1px solid #64748B';
+            }
+            
+            scoreRatingEl.textContent = rating;
+            scoreRatingEl.style.color = color;
+            scoreRatingEl.style.backgroundColor = bgColor;
+            scoreRatingEl.style.display = 'block';
         }
 
         function resetStats() {
@@ -579,6 +631,14 @@
         startBtn.addEventListener('click', startRound);
         resetBtn.addEventListener('click', resetStats);
         container.addEventListener('click', handleCanvasClick);
+
+        // Add spacebar support to start the game
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' && !startBtn.disabled) {
+                event.preventDefault(); // Prevent page scroll
+                startRound();
+            }
+        });
 
         // Handle window resize
         window.addEventListener('resize', () => {
